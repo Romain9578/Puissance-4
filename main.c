@@ -4,50 +4,102 @@
 #define LIGNES 6
 #define COLONNES 7
 
+
 void initialiserPlateau(char plateau[LIGNES][COLONNES]) {
-    for (int l = 0; l < LIGNES; l++)
-        for (int c = 0; c < COLONNES; c++)
-            plateau[l][c] = ' ';
+    for (int i = 0; i < LIGNES; i++)
+        for (int j = 0; j < COLONNES; j++)
+            plateau[i][j] = ' ';
 }
 
 void afficherPlateau(char plateau[LIGNES][COLONNES]) {
     printf("\n  ");
-    for (int c = 0; c < COLONNES; c++) printf("%d ", c + 1);
+    for (int j = 0; j < COLONNES; j++) printf("%d ", j + 1);
     printf("\n");
-    for (int l = 0; l < LIGNES; l++) {
+    for (int i = 0; i < LIGNES; i++) {
         printf("| ");
-        for (int c = 0; c < COLONNES; c++)
-            printf("%c ", plateau[l][c]);
+        for (int j = 0; j < COLONNES; j++)
+            printf("%c ", plateau[i][j]);
         printf("|\n");
     }
     printf("  ");
-    for (int c = 0; c < COLONNES * 2 - 1; c++) printf("-");
+    for (int j = 0; j < COLONNES * 2 - 1; j++) printf("-");
     printf("\n");
 }
 
-// Laisser tomber un pion dans une colonne
-int poserPion(char plateau[LIGNES][COLONNES], int col, char pion) {
-    for (int l = LIGNES - 1; l >= 0; l--) {
-        if (plateau[l][col] == ' ') {
-            plateau[l][col] = pion;
-            return l;
+
+int deposerPion(char plateau[LIGNES][COLONNES], int col, char pion) {
+    for (int i = LIGNES - 1; i >= 0; i--) {
+        if (plateau[i][col] == ' ') {
+            plateau[i][col] = pion;
+            return i;
         }
     }
     return -1; // colonne pleine
 }
 
-// Vérifier si le plateau est rempli
-int plateauPlein(char plateau[LIGNES][COLONNES]) {
-    for (int c = 0; c < COLONNES; c++)
-        if (plateau[0][c] == ' ') return 0;
-    return 1;
+
+int estDansPlateau(int l, int c) {
+    return (l >= 0 && l < LIGNES && c >= 0 && c < COLONNES);
+}
+
+int compterDirection(char plateau[LIGNES][COLONNES], int l, int c, int dL, int dC, char pion) {
+    int compteur = 0;
+    while (estDansPlateau(l, c) && plateau[l][c] == pion) {
+        compteur++;
+        l += dL;
+        c += dC;
+    }
+    return compteur;
+}
+
+int estGagnant(char plateau[LIGNES][COLONNES], int l, int c, char pion) {
+    int directions[4][2] = {
+        {0, 1},   // horizontal →
+        {1, 0},   // vertical ↓
+        {1, 1},   // diagonale ↘
+        {-1, -1}  // ❌ BUG: devrait être {1, -1} pour la diagonale ↗ ("/")
+    };
+
+    for (int i = 0; i < 4; i++) {
+        int dL = directions[i][0];
+        int dC = directions[i][1];
+        int total = compterDirection(plateau, l, c, dL, dC, pion)
+                  + compterDirection(plateau, l, c, -dL, -dC, pion) - 1;
+        if (total >= 4) return 1;
+    }
+    return 0;
 }
 
 int main() {
-    char plateau[LIGNES][COLONNES];
-    initialiserPlateau(plateau);
-    afficherPlateau(plateau);
-    poserPion(plateau, 3, 'X'); // Exemple : placer un pion colonne 4
-    afficherPlateau(plateau);
+    char P[LIGNES][COLONNES];
+    initialiserPlateau(P);
+
+   
+    deposerPion(P, 3, 'X');
+
+  
+    deposerPion(P, 2, 'O');
+    deposerPion(P, 2, 'X');
+
+    
+    deposerPion(P, 1, 'O');
+    deposerPion(P, 1, 'O');
+    deposerPion(P, 1, 'X');
+
+    
+    deposerPion(P, 0, 'O');
+    deposerPion(P, 0, 'O');
+    deposerPion(P, 0, 'O');
+    int l = deposerPion(P, 0, 'X'); 
+
+    afficherPlateau(P);
+
+    if (estGagnant(P, l, 0, 'X')) {
+        printf("Victoire de X (devrait être détectée).\n");
+    } else {
+       
+        printf("BUG: la diagonale \"/\" n'est PAS détectée (volontaire).\n");
+    }
+
     return 0;
 }
